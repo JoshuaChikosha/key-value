@@ -1,10 +1,9 @@
 #include "kv_store.h" 
+#include "command.h"
 #include <iostream>
 #include <cassert>
 
 void repl();
-void help();
-void execute(std::string input);
 static int runTests();
 
 int main(int argc, char* argv[]) {
@@ -20,35 +19,18 @@ int main(int argc, char* argv[]) {
 
 }
 void repl() {
+    KVStore store;
     while (true) {
         std::cout << "kv> ";
         std::string input;
         std::getline(std::cin, input);
-        execute(input);
-        std::cout << input << std::endl;
-    }
-}
-void execute(std::string input) {
-    if (input == "help") {
-        help();
-    }
-    else if (input == "exit") {
-        exit(0);
+        execute(input, store);
+
+
     }
 }
 
-void help() {
-    std::cout << "Available commands: " << std::endl;
-    std::cout << "SET <key> <value>        -> prints OK" << std::endl;
-    std::cout << "GET <key>                -> prints value or (nil)" << std::endl;
-    std::cout << "DEL <key>                -> prints 1 if deleted else 0" << std::endl;
-    std::cout << "EXISTS <key>             -> prints 1 or 0" << std::endl;
-    std::cout << "SIZE                     -> number of keys" << std::endl;
-    std::cout << "KEYS                     -> list all keys (any order ok)" << std::endl;
-    std::cout << "CLEAR                    -> remove everything" << std::endl;
-    std::cout << "HELP                     -> print commands" << std::endl;
-    std::cout << "EXIT                     -> quit program" << std::endl;
-}
+
 
 static int runTests() {
     KVStore store;
@@ -72,6 +54,20 @@ static int runTests() {
     assert(store.size() == 1);
     store.set("b", "x");
     assert(store.size() == 2);
+
+    //del
+    assert(store.del("b") == true);
+    assert(store.del("b") == false);
+
+    //clear
+    store.clear();
+    assert(store.size() == 0);
+
+    //keys
+    store.set("x", "1");
+    store.set("y", "2");
+    std::vector<std::string> allKeys = store.keys();
+    assert(allKeys.size() == 2);
 
 
     std::cout  << "Pass\n";
