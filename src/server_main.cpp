@@ -5,9 +5,16 @@
 #include <unistd.h>
 #include <cstring>
 #include <cstdlib>
+#include <cctype>
+#include "protocol.h"
+#include "kv_store.h"
 
 const int PORT = 12345;
-const int BUFFER_SIZE = 1024;
+
+static std::string toUpper(std::string s) {
+    for (auto& c : s) c = std::toupper(static_cast<unsigned char>(c));
+    return s;
+}
 
 int main() {
     int server_fd = socket(AF_INET, SOCK_STREAM, 0);  // AF_INET=ipv4, SOCK_STREAM=tcp
@@ -53,19 +60,65 @@ int main() {
     inet_ntop(AF_INET, &client_addr.sin_addr, client_ip, INET_ADDRSTRLEN);
     std::cout << client_ip << " connected\n";
 
-    // echo loop: read from client, send back with ECHO: prefix
-    char buffer[BUFFER_SIZE];
+    KVStore store;  // one store for the whole session - state persists across commands
     while (true) {
-        ssize_t n = read(client_fd, buffer, sizeof(buffer) - 1);  // -1 to leave room for '\0'
-        if (n <= 0)
+        std::string line = readLine(client_fd);
+        if (line.empty())
             break;
+        // strip \r in case of Windows line endings
+        if (!line.empty() && line.back() == '\r')
+            line.pop_back();
 
-        buffer[n] = '\0';
-        if (n > 0 && buffer[n - 1] == '\n')
-            buffer[n - 1] = '\0';
+        std::vector<std::string> tokens = tokenize(line);
+        if (tokens.empty())
+            continue;
 
-        std::string reply = std::string("ECHO: ") + buffer + "\n";
-        if (write(client_fd, reply.c_str(), reply.size()) < 0)
+        std::string cmd = toUpper(tokens[0]);
+        std::string response;
+        if (cmd == "HELP") {
+            response = "Available commands: SET, GET, DEL, EXISTS, SIZE, KEYS, CLEAR\n";
+        } 
+        else if (cmd == "GET" && tokens.size() == 2) 
+        {
+            auto val = store.get(tokens[1]);
+            response = val ? (*val + "\n") : "(nil)\n";
+        } 
+        else if (cmd == "SET" && tokens.size() == 3)
+        {
+            store.set(tokens[1], tokens[2]);
+            response = "OK\n";
+        }
+        else if (cmd == "DEL" && tokens.size() == 2) 
+        {
+            response = store.del(tokens[1]) ? "1\n" : "0\n";
+        }
+        else if (cmd == "EXISTS" && tokens.size() == 2)
+        {
+            response = store.exists(tokens[1]) ? "1\n" : "0\n";
+        }
+        else if (cmd == "SIZE")
+        {
+            response = std::to_string(store.size()) + "\n";
+        }
+        else if (cmd == "KEYS")
+        {
+            std::vector<std::string> keys = store.keys();
+            for (size_t i = 0; i < keys.size(); ++i) {
+                if (i > 0) response += " ";
+                response += keys[i];
+            }
+            response += "\n";
+        }
+        else if (cmd == "CLEAR")
+        {
+            store.clear();
+            response = "OK\n";
+        }
+        else {
+            response = "ERR unknown command\n";
+        }
+
+        if (write(client_fd, response.c_str(), response.size()) < 0)
             break;
     }
 
