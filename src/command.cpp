@@ -29,12 +29,7 @@ void execute(std::string input,  KVStore& store) {
 
     if (processedInput.empty()) return;
 
-    // for (size_t i = 0; i < processedInput.size(); i++)
-    // {
-    //     std::cout << i << processedInput[i] << std::endl;
-    // }
-    
-    if (processedInput.size() == 3 && processedInput[0] == "SET"){ //
+    if (processedInput.size() == 3 && processedInput[0] == "SET") {
         store.set(processedInput[1],  processedInput[2]);
         std::cout << "OK" << std::endl;
 

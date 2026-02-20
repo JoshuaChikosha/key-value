@@ -35,7 +35,7 @@ void repl() {
 static int runTests() {
     KVStore store;
 
-    // set/goal
+    // set/get
     store.set("a", "10");
     auto v = store.get("a");
     assert(v.has_value());
