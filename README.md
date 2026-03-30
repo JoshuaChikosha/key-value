@@ -13,8 +13,8 @@ cd build
 ./kv 
 ./kv --help (for help)
 
-Milestone 1 (TCP echo)
-The server listens on port 12345 and echoes back whatever the client sends. The client connects, reads lines from stdin, and prints the server's response.
+Milestone 1–3 (server + client)
+Server listens on 12345. Client connects and sends commands. Full KV over network: SET, GET, DEL, EXISTS, SIZE, KEYS, CLEAR.
 
 Terminal 1: ./kvserver
 Terminal 2: ./kvclient 127.0.0.1 12345

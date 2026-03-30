@@ -14,6 +14,8 @@ add_executable(kv
 # Add new server executable
 add_executable(kvserver
   src/server_main.cpp
+  src/protocol.cpp
+  src/kv_store.cpp
 )
 
 # Add new client executable
