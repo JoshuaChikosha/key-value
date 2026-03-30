@@ -1,0 +1,40 @@
+# Build + quick test on every push / PR. Uses Ubuntu 
+name: CI
+
+on:
+  push:
+    branches: [main, "feature/**"]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        run: cmake --build build --parallel 4
+
+      - name: Run KVStore assertions (local)
+        run: ./build/kv --run-tests
+
+  cppcheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install cppcheck
+        run: sudo apt-get update && sudo apt-get install -y cppcheck
+
+      # Static analysis (no compile) — style checks are noisy; warning level only
+      - name: Run cppcheck
+        run: |
+          cppcheck --error-exitcode=1 --std=c++17 --enable=warning \
+            -I include --inline-suppr \
+            --suppress=missingIncludeSystem \
+            --suppress=assertWithSideEffect \
+            src/ include/
