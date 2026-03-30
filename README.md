@@ -1,49 +1,58 @@
-C++ Key-Value Store
+# key-value (C++)
 
-A small in-memory key-value store written in C++ for learning purposes.
-The project focuses on practicing multi-file C++ projects, basic command-line interaction, and clean program structure.
+In-memory key-value store. There’s a local REPL (`kv`) and a TCP server + client (`kvserver` / `kvclient`) so you can hit the same commands over the network. Built for practice with C++ layout, sockets, and a little line-based protocol.
 
-Build
+**Requirements:** CMake and a C++17 compiler. The server uses POSIX sockets — build and run under WSL or Linux (not native Windows).
+
+## Build
+
+```bash
 cmake -S . -B build
 cmake --build build
+```
 
-Run:
+Binaries land in `build/`: `kv`, `kvserver`, `kvclient`.
 
+## Local REPL
+
+```bash
 cd build
-./kv 
-./kv --help (for help)
+./kv
+```
 
-Milestone 1–3 (server + client)
-Server listens on 12345. Client connects and sends commands. Full KV over network: SET, GET, DEL, EXISTS, SIZE, KEYS, CLEAR.
+Prompt is `kv>`. `HELP` lists commands, `EXIT` quits.
 
-Terminal 1: ./kvserver
-Terminal 2: ./kvclient 127.0.0.1 12345
+## Networked mode
 
-Usage
+Terminal 1 — server listens on port 12345:
 
-Run the program and use the interactive prompt:
+```bash
+./build/kvserver
+```
 
-kv> HELP
-kv> EXIT
+Terminal 2 — client:
 
+```bash
+./build/kvclient 127.0.0.1 12345
+```
 
-Commands
+Same commands as below, one line per request; responses are one line each (KEYS returns keys space-separated on one line).
 
-Command	              Description
-SET <key> <value>	Store a value
-GET <key>	        Retrieve a value (or nil)
-DEL <key>	        Delete a key (returns 1/0)
-EXISTS <key>	    Check if key exists (returns 1/0)
-SIZE	            Number of keys
-KEYS	            List all keys
-CLEAR	            Remove everything
-HELP	            Show commands
-EXIT	            Quit
+## Commands
 
-This project is mainly to get more comfortable with:
+| Command | What it does |
+|---------|----------------|
+| `SET key value` | Store a value |
+| `GET key` | Print value or `(nil)` |
+| `DEL key` | `1` if deleted, else `0` |
+| `EXISTS key` | `1` or `0` |
+| `SIZE` | Number of keys |
+| `KEYS` | All keys, space-separated |
+| `CLEAR` | Wipe the store |
+| `HELP` | Short help text |
 
-separating headers and implementations
+`EXIT` / `quit` only applies to the local REPL and the client (not the server).
 
-building C++ programs with g++
+## Tests
 
-writing simple interactive tools
+Local store: `./kv --run-tests` runs a few asserts.
